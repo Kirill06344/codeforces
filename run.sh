@@ -3,16 +3,15 @@
 DIR="$1"
 NAME=$(basename "$DIR")
 
-GOFILE="$DIR/$NAME.go"
-INFILE="$DIR/$NAME.in"
-OUTFILE="$DIR/$NAME.out"
+BIN=$(mktemp)
+trap 'rm -f "$BIN"' EXIT
 
-go run "$GOFILE" < "$INFILE" > /tmp/actual.out
+g++ -O2 -std=c++17 -o "$BIN" "$DIR/$NAME.cpp" || exit 1
+"$BIN" < "$DIR/$NAME.in" > /tmp/actual.out
 
-if diff -Bbq "$OUTFILE" /tmp/actual.out > /dev/null; then
+if diff -Bbq "$DIR/$NAME.out" /tmp/actual.out > /dev/null; then
   echo "OK"
 else
   echo "WRONG ANSWER"
-  echo "--- diff (expected | got) ---"
-  diff -Bb "$OUTFILE" /tmp/actual.out
+  diff -Bb "$DIR/$NAME.out" /tmp/actual.out
 fi
